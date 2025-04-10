@@ -107,9 +107,6 @@ function showCaseDetail(caseId) {
     document.getElementById('detailAppearingFor').textContent = caseData.appearingFor;
     document.getElementById('detailQuotationAmount').textContent = `₹${caseData.quotationAmount}`;
     document.getElementById('detailPerHearingFee').textContent = caseData.perHearingFee ? `₹${caseData.perHearingFee}` : 'N/A';
-    document.getElementById('detailInvoiceNumber').textContent = caseData.invoiceNumber;
-    document.getElementById('detailInvoiceDate').textContent = caseData.invoiceDate;
-    document.getElementById('detailInvoiceAmount').textContent = `₹${caseData.invoiceAmount}`;
     document.getElementById('detailBalance').textContent = `₹${calculateBalance(caseData)}`;
     document.getElementById('detailPaymentMethod').textContent = caseData.paymentMethod;
     document.getElementById('detailRemarks').textContent = caseData.remarks || 'N/A';
@@ -127,9 +124,13 @@ function showGenerateInvoiceForm() {
     generateInvoiceForm.classList.remove('hidden');
 
     document.getElementById('invoiceCaseTitle').textContent = caseData.caseTitle;
-    document.getElementById('remainingBalance').textContent = calculateBalance(caseData);
-    document.getElementById('newInvoiceNumber').value = generateNextInvoiceNumber(caseData.invoiceNumber);
-    document.getElementById('newInvoiceDate').valueAsDate = new Date();
+    document.getElementById('remainingBalance').textContent = `₹${calculateBalance(caseData)}`;
+    
+    // Generate a simple invoice number based on date
+    const now = new Date();
+    document.getElementById('newInvoiceNumber').value = `INV-${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2,'0')}${now.getDate().toString().padStart(2,'0')}-${Math.floor(Math.random()*9000) + 1000}`;
+    
+    document.getElementById('newInvoiceDate').valueAsDate = now;
     document.getElementById('newInvoiceAmount').value = '';
     document.getElementById('newInvoiceAmount').max = calculateBalance(caseData);
     document.getElementById('newPaymentMethod').value = 'cash';
@@ -156,9 +157,6 @@ function createCase(e) {
         appearingFor: appearingForValue,
         quotationAmount: parseFloat(document.getElementById('quotationAmount').value),
         perHearingFee: document.getElementById('perHearingFee').value ? parseFloat(document.getElementById('perHearingFee').value) : null,
-        invoiceNumber: document.getElementById('invoiceNumber').value,
-        invoiceDate: document.getElementById('invoiceDate').value,
-        invoiceAmount: parseFloat(document.getElementById('invoiceAmount').value),
         paymentMethod: paymentMethodValue,
         remarks: document.getElementById('remarks').value,
         reference: document.getElementById('reference').value,
@@ -181,69 +179,86 @@ function createCase(e) {
 }
 
 function addInstallmentField() {
-    const installmentIndex = document.querySelectorAll('.installment-container').length;
     const container = document.createElement('div');
     container.className = 'installment-container';
-    container.dataset.index = installmentIndex;
-
+    
+    const today = new Date().toISOString().split('T')[0];
+    
     container.innerHTML = `
         <div class="row">
-            <div class="col">
+            <div class="col-md-3">
                 <div class="form-group">
-                    <label for="installmentInvoice${installmentIndex}">Invoice Number</label>
-                    <input type="text" id="installmentInvoice${installmentIndex}" class="installment-invoice">
+                    <label>Invoice Number</label>
+                    <input type="text" class="installment-invoice" placeholder="INV-001">
                 </div>
             </div>
-            <div class="col">
+            <div class="col-md-2">
                 <div class="form-group">
-                    <label for="installmentDate${installmentIndex}">Date</label>
-                    <input type="date" id="installmentDate${installmentIndex}" class="installment-date">
+                    <label>Date</label>
+                    <input type="date" class="installment-date" min="${today}">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="form-group">
+                    <label>Amount (₹)</label>
+                    <input type="number" class="installment-amount" min="0" step="0.01">
                 </div>
             </div>
         </div>
 
         <div class="row">
-            <div class="col">
+            <div class="col-md-3">
                 <div class="form-group">
-                    <label for="installmentAmount${installmentIndex}">Amount (₹)</label>
-                    <input type="number" id="installmentAmount${installmentIndex}" min="0" class="installment-amount">
-                </div>
-            </div>
-            <div class="col">
-                <div class="form-group">
-                    <label for="installmentPaymentMethod${installmentIndex}">Payment Method</label>
-                    <select id="installmentPaymentMethod${installmentIndex}" class="installment-payment-method">
+                    <label>Payment Method</label>
+                    <select class="installment-payment-method">
                         <option value="cash">Cash</option>
+                        <option value="cheque">Cheque</option>
                         <option value="upi">UPI</option>
+                        <option value="bank-transfer">Bank Transfer</option>
                         <option value="other">Other</option>
                     </select>
                 </div>
             </div>
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label>Remarks</label>
+                    <input type="text" class="installment-remarks" placeholder="Payment details">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="form-group">
+                    <label class="checkbox-container">
+                        <input type="checkbox" class="installment-received">
+                        <span class="checkmark"></span>
+                        Received
+                    </label>
+                </div>
+            </div>
         </div>
 
-        <div class="form-group">
-            <label for="installmentCustomPaymentMethod${installmentIndex}">Custom Payment Method</label>
-            <input type="text" id="installmentCustomPaymentMethod${installmentIndex}" class="installment-custom-payment-method" placeholder="Enter custom payment method">
+        <div class="form-group custom-payment-group" style="display: none;">
+            <label>Custom Payment Method</label>
+            <input type="text" class="installment-custom-payment-method" placeholder="Specify payment method">
         </div>
 
         <div class="installment-actions">
-            <button type="button" class="btn-danger remove-installment">Remove</button>
+            <button type="button" class="btn btn-danger remove-installment">
+                <i class="fas fa-trash"></i> Remove
+            </button>
         </div>
     `;
 
     installmentsContainer.appendChild(container);
 
-    container.querySelector('.remove-installment').addEventListener('click', function () {
+    // Add event listeners
+    container.querySelector('.remove-installment').addEventListener('click', function() {
         installmentsContainer.removeChild(container);
     });
 
-    container.querySelector('.installment-payment-method').addEventListener('change', function () {
-        const customInput = container.querySelector('.installment-custom-payment-method');
-        customInput.style.display = this.value === 'other' ? 'block' : 'none';
+    container.querySelector('.installment-payment-method').addEventListener('change', function() {
+        const customInputGroup = container.querySelector('.custom-payment-group');
+        customInputGroup.style.display = this.value === 'other' ? 'block' : 'none';
     });
-
-    // Initialize custom payment method visibility
-    container.querySelector('.installment-custom-payment-method').style.display = 'none';
 }
 
 function getInstallmentsFromForm() {
@@ -251,23 +266,26 @@ function getInstallmentsFromForm() {
     const containers = document.querySelectorAll('.installment-container');
 
     containers.forEach(container => {
-        const index = container.dataset.index;
-        const invoice = document.getElementById(`installmentInvoice${index}`).value;
-        const date = document.getElementById(`installmentDate${index}`).value;
-        const amount = parseFloat(document.getElementById(`installmentAmount${index}`).value);
-        const paymentMethodSelect = document.getElementById(`installmentPaymentMethod${index}`);
-        const customPaymentMethod = document.getElementById(`installmentCustomPaymentMethod${index}`).value;
+        const invoice = container.querySelector('.installment-invoice').value;
+        const date = container.querySelector('.installment-date').value;
+        const amount = parseFloat(container.querySelector('.installment-amount').value);
+        const paymentMethodSelect = container.querySelector('.installment-payment-method');
+        const customPaymentMethod = container.querySelector('.installment-custom-payment-method')?.value || '';
+        const remarks = container.querySelector('.installment-remarks').value;
+        const received = container.querySelector('.installment-received').checked;
 
         const paymentMethod = paymentMethodSelect.value === 'other'
             ? customPaymentMethod
             : paymentMethodSelect.value;
 
-        if (invoice && date && amount) {
+        if (date && amount) {
             installments.push({
                 invoice,
                 date,
                 amount,
-                paymentMethod
+                paymentMethod,
+                remarks,
+                received
             });
         }
     });
@@ -337,26 +355,32 @@ function renderCasesTable() {
             <td>₹${balance}</td>
             <td>${getStatusBadge(balance, caseData.quotationAmount)}</td>
             <td>
-                <button class="view-case" data-id="${caseData.id}">View</button>
-                <button class="edit-case" data-id="${caseData.id}">Edit</button>
-                <button class="delete-case" data-id="${caseData.id}">Delete</button>
+                <button class="btn view-case" data-id="${caseData.id}">View</button>
+                <button class="btn edit-case" data-id="${caseData.id}">Edit</button>
+                <button class="btn delete-case" data-id="${caseData.id}">Delete</button>
             </td>
         `;
 
         casesTableBody.appendChild(row);
     });
 
-    // Add event listeners to the newly created buttons
+    // Add proper event listeners with proper 'this' binding
     document.querySelectorAll('.view-case').forEach(btn => {
-        btn.addEventListener('click', () => showCaseDetail(btn.dataset.id));
+        btn.addEventListener('click', function() {
+            showCaseDetail(this.dataset.id);
+        });
     });
 
     document.querySelectorAll('.edit-case').forEach(btn => {
-        btn.addEventListener('click', () => editCase(btn.dataset.id));
+        btn.addEventListener('click', function() {
+            editCase(this.dataset.id);
+        });
     });
 
     document.querySelectorAll('.delete-case').forEach(btn => {
-        btn.addEventListener('click', () => deleteCase(btn.dataset.id));
+        btn.addEventListener('click', function() {
+            deleteCase(this.dataset.id);
+        });
     });
 
     // Update totals
@@ -365,9 +389,11 @@ function renderCasesTable() {
 }
 
 function calculateBalance(caseData) {
-    const invoiceAmount = caseData.invoiceAmount || 0;
-    const installmentsTotal = (caseData.installments || []).reduce((sum, inst) => sum + (inst.amount || 0), 0);
-    return invoiceAmount - installmentsTotal;
+    const quotationAmount = caseData.quotationAmount || 0;
+    const receivedInstallmentsTotal = (caseData.installments || [])
+        .filter(inst => inst.received) // Only count received installments
+        .reduce((sum, inst) => sum + (inst.amount || 0), 0);
+    return quotationAmount - receivedInstallmentsTotal;
 }
 
 function getStatusBadge(balance, quotation) {
@@ -506,29 +532,51 @@ function editCase(caseId) {
     // Handle installments
     installmentsContainer.innerHTML = '';
     if (caseData.installments && caseData.installments.length > 0) {
-        caseData.installments.forEach((installment, index) => {
+        caseData.installments.forEach((installment) => {
             addInstallmentField();
-
-            // Set values for the newly added installment
-            document.getElementById(`installmentInvoice${index}`).value = installment.invoice;
-            document.getElementById(`installmentDate${index}`).value = installment.date;
-            document.getElementById(`installmentAmount${index}`).value = installment.amount;
-
-            const paymentMethodElem = document.getElementById(`installmentPaymentMethod${index}`);
-            const customPaymentMethodElem = document.getElementById(`installmentCustomPaymentMethod${index}`);
-
+            
+            const containers = document.querySelectorAll('.installment-container');
+            const lastContainer = containers[containers.length - 1];
+            
+            lastContainer.querySelector('.installment-date').value = installment.date;
+            lastContainer.querySelector('.installment-amount').value = installment.amount;
+            
+            const paymentMethodSelect = lastContainer.querySelector('.installment-payment-method');
             if (installment.paymentMethod === 'cash' || installment.paymentMethod === 'upi') {
-                paymentMethodElem.value = installment.paymentMethod;
-                customPaymentMethodElem.value = '';
-                customPaymentMethodElem.style.display = 'none';
+                paymentMethodSelect.value = installment.paymentMethod;
             } else {
-                paymentMethodElem.value = 'other';
-                customPaymentMethodElem.value = installment.paymentMethod;
-                customPaymentMethodElem.style.display = 'block';
+                paymentMethodSelect.value = 'other';
+                lastContainer.querySelector('.installment-custom-payment-method').value = installment.paymentMethod;
+                lastContainer.querySelector('.custom-payment-group').style.display = 'block';
             }
+            
+            lastContainer.querySelector('.installment-received').checked = installment.received || false;
         });
     }
-}
+
+    const containers = document.querySelectorAll('.installment-container');
+    containers.forEach((container, index) => {
+        container.querySelector('.installment-received').addEventListener('change', function() {
+            // Update the main cases array
+            caseData.installments[index].received = this.checked;
+            
+            // Save changes
+            saveCasesToCloud();
+            
+            // If the case details are open, sync the checkbox there
+            if (!caseDetailView.classList.contains('hidden')) {
+                const detailCheckbox = installmentsTableBody.querySelector(`tr[data-index="${index}"] .detail-installment-received`);
+                if (detailCheckbox) {
+                    detailCheckbox.checked = this.checked;
+                    const statusCell = detailCheckbox.closest('tr').querySelector('td:nth-child(5)');
+                    statusCell.textContent = this.checked ? 'Received' : 'Pending';
+                    document.getElementById('detailBalance').textContent = `₹${calculateBalance(caseData)}`;
+                }
+            }
+        });
+    });
+
+}   
 
 function deleteCase(caseId) {
     if (confirm('Are you sure you want to delete this case? This action cannot be undone.')) {
@@ -543,21 +591,73 @@ function renderInstallmentsTable(caseData) {
 
     if (!caseData.installments || caseData.installments.length === 0) {
         const row = document.createElement('tr');
-        row.innerHTML = '<td colspan="4">No installments recorded</td>';
+        row.innerHTML = '<td colspan="8">No installments recorded</td>';
         installmentsTableBody.appendChild(row);
         return;
     }
 
-    caseData.installments.forEach(installment => {
+    caseData.installments.forEach((installment, index) => {
         const row = document.createElement('tr');
+        row.dataset.index = index;
+        
         row.innerHTML = `
-            <td>${installment.invoice}</td>
+            <td>${installment.invoice || 'N/A'}</td>
             <td>${installment.date}</td>
-            <td>₹${installment.amount}</td>
+            <td>₹${installment.amount.toLocaleString('en-IN')}</td>
             <td>${installment.paymentMethod}</td>
+            <td class="text-center">
+                <label class="checkbox-container" title="${installment.received ? 'Mark as pending' : 'Mark as received'}">
+                    <input type="checkbox" class="detail-installment-received" ${installment.received ? 'checked' : ''}>
+                    <span class="checkmark"></span>
+                </label>
+            </td>
+            <td class="${installment.received ? 'text-success' : 'text-warning'}">
+                ${installment.received ? 'Received' : 'Pending'}
+            </td>
+            <td>${installment.remarks || 'N/A'}</td>
+            <td class="text-center">
+                <button class="btn btn-sm btn-outline-danger remove-installment" title="Remove installment">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </td>
         `;
+        
         installmentsTableBody.appendChild(row);
+
+        // Add event listener for the received checkbox
+        row.querySelector('.detail-installment-received').addEventListener('change', function() {
+            caseData.installments[index].received = this.checked;
+            const statusCell = row.querySelector('td:nth-child(6)');
+            statusCell.textContent = this.checked ? 'Received' : 'Pending';
+            statusCell.className = this.checked ? 'text-success' : 'text-warning';
+            document.getElementById('detailBalance').textContent = `₹${calculateBalance(caseData)}`;
+            saveCasesToCloud();
+            syncEditFormCheckbox(caseData.id, index, this.checked);
+        });
+
+        // Add event listener for remove button
+        row.querySelector('.remove-installment').addEventListener('click', function() {
+            if (confirm('Are you sure you want to remove this installment?')) {
+                caseData.installments.splice(index, 1);
+                saveCasesToCloud();
+                renderInstallmentsTable(caseData);
+                document.getElementById('detailBalance').textContent = `₹${calculateBalance(caseData)}`;
+                if (document.getElementById('newCaseForm').classList.contains('hidden') === false) {
+                    editCase(caseData.id);
+                }
+            }
+        });
     });
+}
+
+function syncEditFormCheckbox(caseId, installmentIndex, isChecked) {
+    // Only proceed if we're currently editing this case
+    if (currentCaseId === caseId && !newCaseForm.classList.contains('hidden')) {
+        const containers = document.querySelectorAll('.installment-container');
+        if (containers[installmentIndex]) {
+            containers[installmentIndex].querySelector('.installment-received').checked = isChecked;
+        }
+    }
 }
 
 function generateNextInvoiceNumber(previousInvoice) {
