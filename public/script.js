@@ -36,6 +36,13 @@ const installmentsTableBody = document.getElementById('installmentsTableBody');
 const caseType = document.getElementById('caseType');
 const partyA = document.getElementById('partyA');
 const partyB = document.getElementById('partyB');
+const addHearingBtn = document.getElementById('addHearingBtn');
+const hearingForm = document.getElementById('hearingForm');
+const saveHearingBtn = document.getElementById('saveHearingBtn');
+const cancelHearingBtn = document.getElementById('cancelHearingBtn');
+const hearingDate = document.getElementById('hearingDate');
+const hearingDetails = document.getElementById('hearingDetails');
+const hearingsTableBody = document.getElementById('hearingsTableBody');
 
 // Event Listeners
 newCaseBtn.addEventListener('click', showNewCaseForm);
@@ -58,6 +65,17 @@ cancelInvoiceBtn.addEventListener('click', () => {
     caseDetailView.classList.remove('hidden');
 });
 caseType.addEventListener('change', togglePartyB);
+addHearingBtn.addEventListener('click', () => {
+    hearingForm.classList.remove('hidden');
+    hearingDate.valueAsDate = new Date();
+    hearingDetails.value = '';
+});
+
+cancelHearingBtn.addEventListener('click', () => {
+    hearingForm.classList.add('hidden');
+});
+
+saveHearingBtn.addEventListener('click', saveHearing);
 
 // Initial setup
 toggleCaseNumber();
@@ -67,6 +85,76 @@ toggleCustomPaymentMethod();
 togglePartyB();
 
 // Functions
+function saveHearing() {
+    const caseData = cases.find(c => c.id === currentCaseId);
+    if (!caseData) return;
+
+    if (!hearingDate.value || !hearingDetails.value) {
+        alert('Please enter both date and details');
+        return;
+    }
+
+    if (!caseData.hearings) {
+        caseData.hearings = [];
+    }
+
+    caseData.hearings.push({
+        date: hearingDate.value,
+        details: hearingDetails.value,
+        createdAt: new Date().toISOString()
+    });
+
+    saveCasesToCloud();
+    renderHearingsTable(caseData);
+    hearingForm.classList.add('hidden');
+}
+
+function renderHearingsTable(caseData) {
+    hearingsTableBody.innerHTML = '';
+
+    if (!caseData.hearings || caseData.hearings.length === 0) {
+        hearingsTableBody.innerHTML = '<tr><td colspan="3">No hearings recorded</td></tr>';
+        return;
+    }
+
+    // Sort hearings by date (newest first)
+    const sortedHearings = [...caseData.hearings].sort((a, b) => 
+        new Date(b.date) - new Date(a.date)
+    );
+
+    sortedHearings.forEach((hearing, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${hearing.date}</td>
+            <td>${hearing.details}</td>
+            <td>
+                <button class="btn btn-sm btn-outline-danger delete-hearing" data-index="${index}">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </td>
+        `;
+        hearingsTableBody.appendChild(row);
+    });
+
+    // Add delete event listeners
+    document.querySelectorAll('.delete-hearing').forEach(btn => {
+        btn.addEventListener('click', function() {
+            deleteHearing(this.dataset.index);
+        });
+    });
+}
+
+function deleteHearing(index) {
+    const caseData = cases.find(c => c.id === currentCaseId);
+    if (!caseData || !caseData.hearings) return;
+
+    if (confirm('Are you sure you want to delete this hearing?')) {
+        caseData.hearings.splice(index, 1);
+        saveCasesToCloud();
+        renderHearingsTable(caseData);
+    }
+}
+
 function showNewCaseForm() {
     newCaseForm.classList.remove('hidden');
     viewCases.classList.add('hidden');
@@ -114,6 +202,10 @@ function showCaseDetail(caseId) {
     document.getElementById('detailTds').textContent = caseData.tds === 'yes' ? 'Yes' : 'No';
 
     renderInstallmentsTable(caseData);
+    if (!caseData.hearings) {
+        caseData.hearings = [];
+    }
+    renderHearingsTable(caseData);
 }
 
 function showGenerateInvoiceForm() {
@@ -162,7 +254,8 @@ function createCase(e) {
         reference: document.getElementById('reference').value,
         tds: document.getElementById('tds').value,
         installments: getInstallmentsFromForm(),
-        dateCreated: currentCaseId ? (cases.find(c => c.id === currentCaseId)?.dateCreated || new Date().toISOString()) : new Date().toISOString()
+        dateCreated: currentCaseId ? (cases.find(c => c.id === currentCaseId)?.dateCreated || new Date().toISOString()) : new Date().toISOString(),
+        hearings: []
     };
 
     if (currentCaseId) {

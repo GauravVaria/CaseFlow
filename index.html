@@ -126,7 +126,7 @@
                     <button type="button" id="addInstallmentBtn" class="btn-success">Add Installment</button>
                 </div>
 
-                <div class="row">
+                <!-- <div class="row">
                     <div class="col">
                         <div class="form-group">
                             <label for="paymentMethod">Payment Method</label>
@@ -144,7 +144,7 @@
                             <input type="text" id="customPaymentMethod" placeholder="Enter custom payment method">
                         </div>
                     </div>
-                </div>
+                </div> -->
 
                 <div class="form-group">
                     <label for="remarks">Remarks</label>
@@ -224,12 +224,38 @@
         </div>
 
         <div id="caseDetailView" class="hidden">
+            <div id="hearingsSection" class="card">
+                <h3>Hearings</h3>
+                <button id="addHearingBtn" class="btn">Add Hearing</button>
+                <div id="hearingForm" class="hidden">
+                    <div class="form-group">
+                        <label for="hearingDate">Date</label>
+                        <input type="date" id="hearingDate">
+                    </div>
+                    <div class="form-group">
+                        <label for="hearingDetails">Details</label>
+                        <textarea id="hearingDetails" rows="3"></textarea>
+                    </div>
+                    <button id="saveHearingBtn" class="btn">Save Hearing</button>
+                    <button id="cancelHearingBtn" class="btn btn-secondary">Cancel</button>
+                </div>
+                <table id="hearingsTable" class="table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Details</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="hearingsTableBody"></tbody>
+                </table>
+            </div>
+
             <div class="case-detail-container card">
                 <div class="case-header">
                     <h2 id="detailCaseTitle">Case Title</h2>
                     <div class="case-actions">
                         <button id="generateInvoiceBtn" class="btn-success">Generate Invoice</button>
-                        <button id="hearingsBtn">Hearings</button>
                         <button id="editCaseBtn">Edit Case</button>
                         <button id="backToListBtn">Back to List</button>
                     </div>
@@ -260,10 +286,10 @@
                         <div class="info-label">Balance:</div>
                         <div id="detailBalance" class="info-value">-</div>
                     </div>
-                    <div class="info-group">
+                    <!-- <div class="info-group">
                         <div class="info-label">Payment Method:</div>
                         <div id="detailPaymentMethod" class="info-value">-</div>
-                    </div>
+                    </div> -->
                     <div class="info-group">
                         <div class="info-label">Remarks:</div>
                         <div id="detailRemarks" class="info-value">-</div>
