@@ -118,7 +118,7 @@ function renderHearingsTable(caseData) {
     }
 
     // Sort hearings by date (newest first)
-    const sortedHearings = [...caseData.hearings].sort((a, b) => 
+    const sortedHearings = [...caseData.hearings].sort((a, b) =>
         new Date(b.date) - new Date(a.date)
     );
 
@@ -138,7 +138,7 @@ function renderHearingsTable(caseData) {
 
     // Add delete event listeners
     document.querySelectorAll('.delete-hearing').forEach(btn => {
-        btn.addEventListener('click', function() {
+        btn.addEventListener('click', function () {
             deleteHearing(this.dataset.index);
         });
     });
@@ -217,11 +217,11 @@ function showGenerateInvoiceForm() {
 
     document.getElementById('invoiceCaseTitle').textContent = caseData.caseTitle;
     document.getElementById('remainingBalance').textContent = `₹${calculateBalance(caseData)}`;
-    
+
     // Generate a simple invoice number based on date
     const now = new Date();
-    document.getElementById('newInvoiceNumber').value = `INV-${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2,'0')}${now.getDate().toString().padStart(2,'0')}-${Math.floor(Math.random()*9000) + 1000}`;
-    
+    document.getElementById('newInvoiceNumber').value = `INV-${now.getFullYear()}${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}-${Math.floor(Math.random() * 9000) + 1000}`;
+
     document.getElementById('newInvoiceDate').valueAsDate = now;
     document.getElementById('newInvoiceAmount').value = '';
     document.getElementById('newInvoiceAmount').max = calculateBalance(caseData);
@@ -274,9 +274,9 @@ function createCase(e) {
 function addInstallmentField() {
     const container = document.createElement('div');
     container.className = 'installment-container';
-    
+
     const today = new Date().toISOString().split('T')[0];
-    
+
     container.innerHTML = `
         <div class="row">
             <div class="col-md-3">
@@ -344,11 +344,11 @@ function addInstallmentField() {
     installmentsContainer.appendChild(container);
 
     // Add event listeners
-    container.querySelector('.remove-installment').addEventListener('click', function() {
+    container.querySelector('.remove-installment').addEventListener('click', function () {
         installmentsContainer.removeChild(container);
     });
 
-    container.querySelector('.installment-payment-method').addEventListener('change', function() {
+    container.querySelector('.installment-payment-method').addEventListener('change', function () {
         const customInputGroup = container.querySelector('.custom-payment-group');
         customInputGroup.style.display = this.value === 'other' ? 'block' : 'none';
     });
@@ -468,19 +468,19 @@ function renderCasesTable() {
 
     // Add proper event listeners with proper 'this' binding
     document.querySelectorAll('.view-case').forEach(btn => {
-        btn.addEventListener('click', function() {
+        btn.addEventListener('click', function () {
             showCaseDetail(this.dataset.id);
         });
     });
 
     document.querySelectorAll('.edit-case').forEach(btn => {
-        btn.addEventListener('click', function() {
+        btn.addEventListener('click', function () {
             editCase(this.dataset.id);
         });
     });
 
     document.querySelectorAll('.delete-case').forEach(btn => {
-        btn.addEventListener('click', function() {
+        btn.addEventListener('click', function () {
             deleteCase(this.dataset.id);
         });
     });
@@ -492,9 +492,9 @@ function renderCasesTable() {
 }
 
 function formatDate(dateString) {
-    const options = { 
-        day: '2-digit', 
-        month: '2-digit', 
+    const options = {
+        day: '2-digit',
+        month: '2-digit',
         year: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
@@ -652,13 +652,13 @@ function editCase(caseId) {
     if (caseData.installments && caseData.installments.length > 0) {
         caseData.installments.forEach((installment) => {
             addInstallmentField();
-            
+
             const containers = document.querySelectorAll('.installment-container');
             const lastContainer = containers[containers.length - 1];
-            
+
             lastContainer.querySelector('.installment-date').value = installment.date;
             lastContainer.querySelector('.installment-amount').value = installment.amount;
-            
+
             const paymentMethodSelect = lastContainer.querySelector('.installment-payment-method');
             if (installment.paymentMethod === 'cash' || installment.paymentMethod === 'upi') {
                 paymentMethodSelect.value = installment.paymentMethod;
@@ -667,20 +667,20 @@ function editCase(caseId) {
                 lastContainer.querySelector('.installment-custom-payment-method').value = installment.paymentMethod;
                 lastContainer.querySelector('.custom-payment-group').style.display = 'block';
             }
-            
+
             lastContainer.querySelector('.installment-received').checked = installment.received || false;
         });
     }
 
     const containers = document.querySelectorAll('.installment-container');
     containers.forEach((container, index) => {
-        container.querySelector('.installment-received').addEventListener('change', function() {
+        container.querySelector('.installment-received').addEventListener('change', function () {
             // Update the main cases array
             caseData.installments[index].received = this.checked;
-            
+
             // Save changes
             saveCasesToCloud();
-            
+
             // If the case details are open, sync the checkbox there
             if (!caseDetailView.classList.contains('hidden')) {
                 const detailCheckbox = installmentsTableBody.querySelector(`tr[data-index="${index}"] .detail-installment-received`);
@@ -694,21 +694,21 @@ function editCase(caseId) {
         });
     });
 
-}   
+}
 
 function deleteCase(caseId) {
     try {
         if (confirm('Are you sure you want to delete this case? This action cannot be undone.')) {
             const index = cases.findIndex(c => c.id === caseId);
-            
+
             if (index === -1) {
                 throw new Error('Case not found');
             }
-            
+
             cases.splice(index, 1);
             saveCasesToCloud();
             renderCasesTable();
-            
+
             if (currentCaseId === caseId) {
                 showViewCases();
                 currentCaseId = null;
@@ -733,7 +733,7 @@ function renderInstallmentsTable(caseData) {
     caseData.installments.forEach((installment, index) => {
         const row = document.createElement('tr');
         row.dataset.index = index;
-        
+
         row.innerHTML = `
             <td>${installment.invoice || 'N/A'}</td>
             <td>${installment.date}</td>
@@ -755,11 +755,11 @@ function renderInstallmentsTable(caseData) {
                 </button>
             </td>
         `;
-        
+
         installmentsTableBody.appendChild(row);
 
         // Add event listener for the received checkbox
-        row.querySelector('.detail-installment-received').addEventListener('change', function() {
+        row.querySelector('.detail-installment-received').addEventListener('change', function () {
             caseData.installments[index].received = this.checked;
             const statusCell = row.querySelector('td:nth-child(6)');
             statusCell.textContent = this.checked ? 'Received' : 'Pending';
@@ -770,7 +770,7 @@ function renderInstallmentsTable(caseData) {
         });
 
         // Add event listener for remove button
-        row.querySelector('.remove-installment').addEventListener('click', function() {
+        row.querySelector('.remove-installment').addEventListener('click', function () {
             if (confirm('Are you sure you want to remove this installment?')) {
                 caseData.installments.splice(index, 1);
                 saveCasesToCloud();
@@ -846,95 +846,25 @@ function generateNewInvoice(e) {
     showCaseDetail(currentCaseId);
 }
 
-// Google Auth Integration
-let auth2;
-let isSignedIn = false;
+const CLIENT_ID = '302098980124-0rg1q7065lh9t24rq22h1ag584pp1de9.apps.googleusercontent.com';
+const SCOPES = 'https://www.googleapis.com/auth/drive.appdata';
+
+let accessToken = null;
 let currentUser = null;
+let tokenClient = null;
+let caseFileId = null;
 
-// Function to initialize the Google API client
-function initGoogleAuth() {
-    gapi.load('client:auth2', () => {
-        gapi.client.init({
-            clientId: '302098980124-0rg1q7065lh9t24rq22h1ag584pp1de9.apps.googleusercontent.com',
-            scope: 'https://www.googleapis.com/auth/drive.appdata',
-            plugin_name: 'CaseFlow'
-        }).then(() => {
-            auth2 = gapi.auth2.getAuthInstance();
-            isSignedIn = auth2.isSignedIn.get();
-
-            // Update UI based on sign-in state
-            updateSignInStatus(isSignedIn);
-
-            // Listen for sign-in state changes
-            auth2.isSignedIn.listen(updateSignInStatus);
-
-            // Handle the initial sign-in state
-            if (isSignedIn) {
-                currentUser = auth2.currentUser.get();
-                loadCasesFromCloud();
-            } else {
-                showSignInPrompt();
-            }
-        }).catch(error => {
-            console.error('Error initializing Google API client:', error);
-        });
+const initGoogleAuth = () => {
+    tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: CLIENT_ID,
+        scope: SCOPES,
+        callback: handleTokenResponse,
     });
-}
-function showLoading(show) {
-    const loader = document.getElementById('loader') ||
-        document.createElement('div');
-    loader.id = 'loader';
-    loader.innerHTML = 'Loading...';
-    loader.style.cssText = 'position:fixed;top:0;left:0;width:100%;background:yellow;padding:10px;z-index:1000;';
-    if (show) {
-        document.body.appendChild(loader);
-    } else {
-        document.getElementById('loader')?.remove();
-    }
-}
-// Function to update UI based on sign-in state
-function updateSignInStatus(isSignedIn) {
-    const container = document.querySelector('.container');
 
-    if (isSignedIn) {
-        // User is signed in
-        document.getElementById('signInOverlay')?.remove();
-        container.style.display = 'block';
+    showSignInPrompt();
+};
 
-        currentUser = auth2.currentUser.get();
-        const profile = currentUser.getBasicProfile();
-
-        // Update user info in the header
-        const header = document.querySelector('header');
-        const userInfo = document.createElement('div');
-        userInfo.className = 'user-info';
-        userInfo.innerHTML = `
-            <span>${profile.getName()}</span>
-            <button id="signOutBtn">Sign Out</button>
-        `;
-
-        if (!document.querySelector('.user-info')) {
-            header.appendChild(userInfo);
-        }
-
-        document.getElementById('signOutBtn')?.addEventListener('click', signOut);
-
-        // Load cases from Google Drive
-        loadCasesFromCloud();
-    } else {
-        // User is signed out
-        container.style.display = 'none';
-
-        // Show sign-in prompt
-        showSignInPrompt();
-    }
-}
-
-// Function to show sign-in prompt
-function showSignInPrompt() {
-    // Remove existing overlay if it exists
-    document.getElementById('signInOverlay')?.remove();
-
+const showSignInPrompt = () => {
     const overlay = document.createElement('div');
     overlay.id = 'signInOverlay';
     overlay.style.cssText = `
@@ -943,220 +873,150 @@ function showSignInPrompt() {
         left: 0;
         width: 100%;
         height: 100%;
-        background-color: rgba(255, 255, 255, 0.9);
+        background-color: rgba(255,255,255,0.95);
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        z-index: 1000;
-    `;
-
+        z-index: 9999;
+      `;
     overlay.innerHTML = `
-        <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; max-width: 400px;">
-            <h2 style="margin-bottom: 20px; color: var(--primary);">Legal Case Management System</h2>
-            <p style="margin-bottom: 30px;">Sign in with your Google account to securely store and manage your legal cases.</p>
-            <div id="googleSignInButton"></div>
+        <div style="text-align: center; padding: 20px; border-radius: 10px; background: white;">
+          <h2>Legal Case Management System</h2>
+          <p>Sign in with Google to store and manage your cases.</p>
+          <button id="googleSignInBtn">Sign In with Google</button>
         </div>
-    `;
-
+      `;
     document.body.appendChild(overlay);
-
-    // Render the Google Sign-In button
-    gapi.signin2.render('googleSignInButton', {
-        'scope': 'https://www.googleapis.com/auth/drive.appdata',
-        'width': 240,
-        'height': 50,
-        'longtitle': true,
-        'theme': 'dark',
-        'onsuccess': onSignIn,
-        'onfailure': onSignInFailure
+    document.getElementById('googleSignInBtn').addEventListener('click', () => {
+        tokenClient.requestAccessToken();
     });
-}
+};
 
-// Function called when sign-in is successful
-function onSignIn(googleUser) {
-    currentUser = googleUser;
-    isSignedIn = true;
-    updateSignInStatus(true);
-}
+const handleTokenResponse = (response) => {
+    if (response.error) return alert('Sign-in failed');
+    accessToken = response.access_token;
 
-// Function called when sign-in fails
-function onSignInFailure(error) {
-    console.error('Google Sign-In error:', error);
-    alert('Sign-in failed. Please try again.');
-}
-
-// Function to sign out
-function signOut() {
-    if (auth2) {
-        auth2.signOut().then(() => {
-            isSignedIn = false;
-            currentUser = null;
-            updateSignInStatus(false);
+    fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: { Authorization: `Bearer ${accessToken}` }
+    })
+        .then(res => res.json())
+        .then(user => {
+            currentUser = user;
+            updateUIAfterSignIn(user);
+            loadCasesFromCloud();
         });
-    }
-}
+};
 
-// Function to save cases to Google Drive
-function saveCasesToCloud() {
-    if (!isSignedIn || !currentUser) {
-        // Save to localStorage as fallback
-        localStorage.setItem('legalCases', JSON.stringify(cases));
-        return;
-    }
+const updateUIAfterSignIn = (user) => {
+    document.getElementById('signInOverlay')?.remove();
+    document.querySelector('.container').style.display = 'block';
 
-    // Also update localStorage as backup
-    localStorage.setItem('legalCases', JSON.stringify(cases));
+    const header = document.querySelector('header');
+    const userInfo = document.createElement('div');
+    userInfo.className = 'user-info';
+    userInfo.innerHTML = `
+        <span>${user.name}</span>
+        <button id="signOutBtn">Sign Out</button>
+      `;
+    header.appendChild(userInfo);
+    document.getElementById('signOutBtn').addEventListener('click', signOut);
+};
 
-    // Save to Google Drive AppData folder
-    gapi.client.drive.files.list({
-        spaces: 'appDataFolder',
-        fields: 'files(id, name)',
-        q: "name = 'legal_cases.json'"
-    }).then(response => {
-        const files = response.result.files;
-        const casesJson = JSON.stringify(cases);
-
-        if (files && files.length > 0) {
-            // Update existing file
-            const fileId = files[0].id;
-
-            const metadata = {
-                mimeType: 'application/json'
-            };
-
-            const blob = new Blob([casesJson], { type: 'application/json' });
-            const form = new FormData();
-            form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-            form.append('file', blob);
-
-            fetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=multipart`, {
-                method: 'PATCH',
-                headers: new Headers({
-                    'Authorization': 'Bearer ' + currentUser.getAuthResponse().access_token
-                }),
-                body: form
-            }).catch(error => {
-                console.error('Error updating file:', error);
-            });
-        } else {
-            // Create new file
-            const metadata = {
-                name: 'legal_cases.json',
-                mimeType: 'application/json',
-                parents: ['appDataFolder']
-            };
-
-            const blob = new Blob([casesJson], { type: 'application/json' });
-            const form = new FormData();
-            form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-            form.append('file', blob);
-
-            fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-                method: 'POST',
-                headers: new Headers({
-                    'Authorization': 'Bearer ' + currentUser.getAuthResponse().access_token
-                }),
-                body: form
-            }).catch(error => {
-                console.error('Error creating file:', error);
-            });
-        }
-    }).catch(error => {
-        console.error('Error accessing Google Drive:', error);
+const signOut = () => {
+    google.accounts.oauth2.revoke(accessToken, () => {
+        accessToken = null;
+        currentUser = null;
+        document.querySelector('.user-info')?.remove();
+        document.querySelector('.container').style.display = 'none';
+        showSignInPrompt();
     });
-}
+};
 
-// Function to load cases from Google Drive
-function loadCasesFromCloud() {
-    if (!isSignedIn || !currentUser) {
-        // Load from localStorage as fallback
-        cases = JSON.parse(localStorage.getItem('legalCases')) || [];
-        renderCasesTable();
-        return;
-    }
-
-    gapi.client.drive.files.list({
-        spaces: 'appDataFolder',
-        fields: 'files(id, name)',
-        q: "name = 'legal_cases.json'"
-    }).then(response => {
-        const files = response.result.files;
-
-        if (files && files.length > 0) {
-            const fileId = files[0].id;
-
-            gapi.client.drive.files.get({
-                fileId: fileId,
-                alt: 'media'
-            }).then(response => {
-                cases = response.result || [];
-                renderCasesTable();
-            }).catch(error => {
-                console.error('Error loading file content:', error);
-                // Fall back to localStorage
-                cases = JSON.parse(localStorage.getItem('legalCases')) || [];
-                renderCasesTable();
-            });
-        } else {
-            // No file found, try localStorage
-            cases = JSON.parse(localStorage.getItem('legalCases')) || [];
-            renderCasesTable();
-        }
-    }).catch(error => {
-        console.error('Error accessing Google Drive:', error);
-        // Fall back to localStorage
-        cases = JSON.parse(localStorage.getItem('legalCases')) || [];
-        renderCasesTable();
-    });
-}
-
-// Load Google API client library
-function loadGoogleApi() {
-    const script = document.createElement('script');
-    script.src = 'https://apis.google.com/js/api.js';
-    script.onload = () => {
-        initGoogleAuth();
+const saveCasesToCloud = async (cases) => {
+    const metadata = {
+        name: 'cases.json',
+        parents: ['appDataFolder'],
+        mimeType: 'application/json',
     };
-    document.body.appendChild(script);
-}
 
-// Add styles for sign-in overlay
-function addGoogleSignInStyles() {
-    const style = document.createElement('style');
-    style.textContent = `
-        .user-info {
-            position: absolute;
-            right: 20px;
-            top: 50%;
-            transform: translateY(-50%);
-            display: flex;
-            align-items: center;
-            color: white;
-        }
+    const boundary = 'foo_bar_baz';
+    const delimiter = `--${boundary}`;
+    const closeDelim = `--${boundary}--`;
 
-        .user-info span {
-            margin-right: 10px;
-        }
+    const multipartRequestBody =
+        `${delimiter}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n` +
+        JSON.stringify(metadata) +
+        `\r\n${delimiter}\r\nContent-Type: application/json\r\n\r\n` +
+        JSON.stringify(cases) +
+        `\r\n${closeDelim}`;
 
-        #signOutBtn {
-            background-color: #d9534f;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 3px;
-            cursor: pointer;
-        }
+    let url = 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
+    let method = 'POST';
 
-        #signOutBtn:hover {
-            background-color: #c9302c;
-        }
-    `;
-    document.head.appendChild(style);
-}
+    if (caseFileId) {
+        url = `https://www.googleapis.com/upload/drive/v3/files/${caseFileId}?uploadType=multipart`;
+        method = 'PATCH';
+    }
 
-// Initialize the app
-document.addEventListener('DOMContentLoaded', () => {
-    addGoogleSignInStyles();
-    loadGoogleApi();
+    const res = await fetch(url, {
+        method,
+        headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': `multipart/related; boundary=${boundary}`,
+        },
+        body: multipartRequestBody,
+    });
+
+    const data = await res.json();
+    caseFileId = data.id;
+};
+
+const loadCasesFromCloud = async () => {
+    const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=name='cases.json'+and+trashed=false+and+parents in 'appDataFolder'&spaces=appDataFolder&fields=files(id,name)`, {
+        headers: { Authorization: `Bearer ${accessToken}` }
+    });
+    const { files } = await res.json();
+
+    if (files.length > 0) {
+        caseFileId = files[0].id;
+
+        const contentRes = await fetch(`https://www.googleapis.com/drive/v3/files/${caseFileId}?alt=media`, {
+            headers: { Authorization: `Bearer ${accessToken}` }
+        });
+
+        const cases = await contentRes.json();
+        renderCases(cases);
+    }
+};
+
+const renderCases = (cases) => {
+    const caseList = document.getElementById('caseList');
+    caseList.innerHTML = '';
+    cases.forEach((c, i) => {
+        const div = document.createElement('div');
+        div.className = 'case';
+        div.innerHTML = `<h3>${c.title}</h3><p>${c.description}</p>`;
+        caseList.appendChild(div);
+    });
+};
+
+document.getElementById('caseForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const title = document.getElementById('title').value;
+    const description = document.getElementById('description').value;
+    const newCase = { title, description };
+
+    const existing = Array.from(document.querySelectorAll('.case')).map(div => ({
+        title: div.querySelector('h3').innerText,
+        description: div.querySelector('p').innerText
+    }));
+
+    existing.push(newCase);
+    renderCases(existing);
+    await saveCasesToCloud(existing);
+
+    document.getElementById('caseForm').reset();
 });
+
+document.addEventListener('DOMContentLoaded', initGoogleAuth);
