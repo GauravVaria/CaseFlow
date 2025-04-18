@@ -846,177 +846,101 @@ function generateNewInvoice(e) {
     showCaseDetail(currentCaseId);
 }
 
-const CLIENT_ID = '302098980124-0rg1q7065lh9t24rq22h1ag584pp1de9.apps.googleusercontent.com';
-const SCOPES = 'https://www.googleapis.com/auth/drive.appdata';
+let auth2, currentUser = null, isSignedIn = false;
 
-let accessToken = null;
-let currentUser = null;
-let tokenClient = null;
-let caseFileId = null;
+function updateUI() {
+  const container = document.getElementById('caseContainer');
+  const signInSection = document.getElementById('signInSection');
+  const userInfo = document.getElementById('userInfo');
 
-const initGoogleAuth = () => {
-    tokenClient = google.accounts.oauth2.initTokenClient({
-        client_id: CLIENT_ID,
-        scope: SCOPES,
-        callback: handleTokenResponse,
-    });
-
-    showSignInPrompt();
-};
-
-const showSignInPrompt = () => {
-    const overlay = document.createElement('div');
-    overlay.id = 'signInOverlay';
-    overlay.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(255,255,255,0.95);
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        z-index: 9999;
-      `;
-    overlay.innerHTML = `
-        <div style="text-align: center; padding: 20px; border-radius: 10px; background: white;">
-          <h2>Legal Case Management System</h2>
-          <p>Sign in with Google to store and manage your cases.</p>
-          <button id="googleSignInBtn">Sign In with Google</button>
-        </div>
-      `;
-    document.body.appendChild(overlay);
-    document.getElementById('googleSignInBtn').addEventListener('click', () => {
-        tokenClient.requestAccessToken();
-    });
-};
-
-const handleTokenResponse = (response) => {
-    if (response.error) return alert('Sign-in failed');
-    accessToken = response.access_token;
-
-    fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-        headers: { Authorization: `Bearer ${accessToken}` }
-    })
-        .then(res => res.json())
-        .then(user => {
-            currentUser = user;
-            updateUIAfterSignIn(user);
-            loadCasesFromCloud();
-        });
-};
-
-const updateUIAfterSignIn = (user) => {
-    document.getElementById('signInOverlay')?.remove();
-    document.querySelector('.container').style.display = 'block';
-
-    const header = document.querySelector('header');
-    const userInfo = document.createElement('div');
-    userInfo.className = 'user-info';
+  if (isSignedIn && currentUser) {
+    const profile = currentUser.getBasicProfile();
     userInfo.innerHTML = `
-        <span>${user.name}</span>
-        <button id="signOutBtn">Sign Out</button>
-      `;
-    header.appendChild(userInfo);
-    document.getElementById('signOutBtn').addEventListener('click', signOut);
-};
+      <span>${profile.getName()}</span>
+      <button onclick="signOut()">Sign Out</button>
+    `;
 
-const signOut = () => {
-    google.accounts.oauth2.revoke(accessToken, () => {
-        accessToken = null;
-        currentUser = null;
-        document.querySelector('.user-info')?.remove();
-        document.querySelector('.container').style.display = 'none';
-        showSignInPrompt();
-    });
-};
+    signInSection.style.display = 'none';
+    container.style.display = 'block';
+  } else {
+    userInfo.innerHTML = '';
+    signInSection.style.display = 'block';
+    container.style.display = 'none';
+  }
+}
 
-const saveCasesToCloud = async (cases) => {
-    const metadata = {
-        name: 'cases.json',
-        parents: ['appDataFolder'],
-        mimeType: 'application/json',
-    };
+function initGoogleAuth() {
+  gapi.load('client:auth2', () => {
+    gapi.client.init({
+      clientId: '302098980124-0rg1q7065lh9t24rq22h1ag584pp1de9.apps.googleusercontent.com',
+      scope: 'https://www.googleapis.com/auth/drive.appdata'
+    }).then(() => {
+      auth2 = gapi.auth2.getAuthInstance();
+      isSignedIn = auth2.isSignedIn.get();
 
-    const boundary = 'foo_bar_baz';
-    const delimiter = `--${boundary}`;
-    const closeDelim = `--${boundary}--`;
+      if (isSignedIn) {
+        currentUser = auth2.currentUser.get();
+        loadCasesFromCloud();
+      }
 
-    const multipartRequestBody =
-        `${delimiter}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n` +
-        JSON.stringify(metadata) +
-        `\r\n${delimiter}\r\nContent-Type: application/json\r\n\r\n` +
-        JSON.stringify(cases) +
-        `\r\n${closeDelim}`;
+      updateUI();
 
-    let url = 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
-    let method = 'POST';
+      auth2.isSignedIn.listen(status => {
+        isSignedIn = status;
+        currentUser = status ? auth2.currentUser.get() : null;
+        updateUI();
+      });
 
-    if (caseFileId) {
-        url = `https://www.googleapis.com/upload/drive/v3/files/${caseFileId}?uploadType=multipart`;
-        method = 'PATCH';
-    }
-
-    const res = await fetch(url, {
-        method,
-        headers: {
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': `multipart/related; boundary=${boundary}`,
-        },
-        body: multipartRequestBody,
-    });
-
-    const data = await res.json();
-    caseFileId = data.id;
-};
-
-const loadCasesFromCloud = async () => {
-    const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=name='cases.json'+and+trashed=false+and+parents in 'appDataFolder'&spaces=appDataFolder&fields=files(id,name)`, {
-        headers: { Authorization: `Bearer ${accessToken}` }
-    });
-    const { files } = await res.json();
-
-    if (files.length > 0) {
-        caseFileId = files[0].id;
-
-        const contentRes = await fetch(`https://www.googleapis.com/drive/v3/files/${caseFileId}?alt=media`, {
-            headers: { Authorization: `Bearer ${accessToken}` }
+      document.getElementById('signInBtn').addEventListener('click', () => {
+        auth2.signIn().then(user => {
+          currentUser = user;
+          isSignedIn = true;
+          updateUI();
+          loadCasesFromCloud();
+        }).catch(err => {
+          console.error('Sign-in failed:', err);
         });
-
-        const cases = await contentRes.json();
-        renderCases(cases);
-    }
-};
-
-const renderCases = (cases) => {
-    const caseList = document.getElementById('caseList');
-    caseList.innerHTML = '';
-    cases.forEach((c, i) => {
-        const div = document.createElement('div');
-        div.className = 'case';
-        div.innerHTML = `<h3>${c.title}</h3><p>${c.description}</p>`;
-        caseList.appendChild(div);
+      });
     });
-};
+  });
+}
 
-document.getElementById('caseForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const title = document.getElementById('title').value;
-    const description = document.getElementById('description').value;
-    const newCase = { title, description };
+function signOut() {
+  auth2.signOut().then(() => {
+    currentUser = null;
+    isSignedIn = false;
+    updateUI();
+  });
+}
 
-    const existing = Array.from(document.querySelectorAll('.case')).map(div => ({
-        title: div.querySelector('h3').innerText,
-        description: div.querySelector('p').innerText
-    }));
+function loadCasesFromCloud() {
+  if (!currentUser) return;
 
-    existing.push(newCase);
-    renderCases(existing);
-    await saveCasesToCloud(existing);
+  gapi.client.drive.files.list({
+    spaces: 'appDataFolder',
+    fields: 'files(id, name)',
+    q: "name = 'legal_cases.json'"
+  }).then(response => {
+    const files = response.result.files;
+    if (files.length > 0) {
+      const fileId = files[0].id;
+      gapi.client.drive.files.get({
+        fileId: fileId,
+        alt: 'media'
+      }).then(res => {
+        const cases = res.result;
+        document.getElementById('caseTable').innerText = JSON.stringify(cases, null, 2);
+      });
+    } else {
+      document.getElementById('caseTable').innerText = 'No cases found.';
+    }
+  }).catch(err => {
+    console.error('Drive load error:', err);
+  });
+}
 
-    document.getElementById('caseForm').reset();
-});
-
-document.addEventListener('DOMContentLoaded', initGoogleAuth);
+// Load Google API script
+const script = document.createElement('script');
+script.src = 'https://apis.google.com/js/api.js';
+script.onload = () => initGoogleAuth();
+document.body.appendChild(script);
