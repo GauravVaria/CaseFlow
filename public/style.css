@@ -22,7 +22,7 @@ body {
 }
 
 .container {
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
     padding: 20px;
 }
@@ -450,4 +450,16 @@ tr:hover {
 #hearingsTable {
     margin-top: 15px;
     width: 100%;
+}
+
+#casesTable th:nth-child(1), 
+#casesTable td:nth-child(1) {
+    width: 100px; /* Fixed width for date column */
+    white-space: nowrap;
+}
+
+/* Adjust other columns as needed */
+#casesTable th:nth-child(2), 
+#casesTable td:nth-child(2) {
+    min-width: 200px; /* Case title column */
 }

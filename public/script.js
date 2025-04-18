@@ -438,8 +438,17 @@ function renderCasesTable() {
         const balance = calculateBalance(caseData);
         outstandingTotal += balance;
 
+        // Format the date
+        const createdDate = new Date(caseData.dateCreated);
+        const formattedDate = createdDate.toLocaleDateString('en-IN', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        });
+
         const row = document.createElement('tr');
         row.innerHTML = `
+            <td>${formattedDate}</td> <!-- New date column -->
             <td>${caseData.caseTitle}</td>
             <td>${caseData.caseNumber}</td>
             <td>${caseData.court}</td>
@@ -479,7 +488,23 @@ function renderCasesTable() {
     // Update totals
     totalCases.textContent = filteredCases.length;
     totalOutstanding.textContent = outstandingTotal.toFixed(2);
+
 }
+
+function formatDate(dateString) {
+    const options = { 
+        day: '2-digit', 
+        month: '2-digit', 
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+    };
+    return new Date(dateString).toLocaleString('en-IN', options);
+}
+
+// Then use it in renderCasesTable:
+const formattedDate = formatDate(caseData.dateCreated);
 
 function calculateBalance(caseData) {
     const quotationAmount = caseData.quotationAmount || 0;
@@ -672,10 +697,26 @@ function editCase(caseId) {
 }   
 
 function deleteCase(caseId) {
-    if (confirm('Are you sure you want to delete this case? This action cannot be undone.')) {
-        cases = cases.filter(c => c.id !== caseId);
-        saveCasesToCloud();
-        renderCasesTable();
+    try {
+        if (confirm('Are you sure you want to delete this case? This action cannot be undone.')) {
+            const index = cases.findIndex(c => c.id === caseId);
+            
+            if (index === -1) {
+                throw new Error('Case not found');
+            }
+            
+            cases.splice(index, 1);
+            saveCasesToCloud();
+            renderCasesTable();
+            
+            if (currentCaseId === caseId) {
+                showViewCases();
+                currentCaseId = null;
+            }
+        }
+    } catch (error) {
+        console.error('Error deleting case:', error);
+        alert('Failed to delete case. Please try again.');
     }
 }
 
