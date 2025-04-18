@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CaseFlow: Legal Case Management System</title>
     <link rel="stylesheet" href="/public/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
 </head>
 
 <body>
@@ -132,7 +133,8 @@
                             <select id="paymentMethod">
                                 <option value="cash">Cash</option>
                                 <option value="upi">UPI</option>
-                                <option value="other">Other</option>
+                                <option value="other">Cheque</option>
+                                <option value="upi">NEFT</option>
                             </select>
                         </div>
                     </div>
@@ -227,6 +229,7 @@
                     <h2 id="detailCaseTitle">Case Title</h2>
                     <div class="case-actions">
                         <button id="generateInvoiceBtn" class="btn-success">Generate Invoice</button>
+                        <button id="hearingsBtn">Hearings</button>
                         <button id="editCaseBtn">Edit Case</button>
                         <button id="backToListBtn">Back to List</button>
                     </div>
@@ -252,18 +255,6 @@
                     <div class="info-group">
                         <div class="info-label">Per Hearing Fee:</div>
                         <div id="detailPerHearingFee" class="info-value">-</div>
-                    </div>
-                    <div class="info-group">
-                        <div class="info-label">Invoice Number:</div>
-                        <div id="detailInvoiceNumber" class="info-value">-</div>
-                    </div>
-                    <div class="info-group">
-                        <div class="info-label">Invoice Date:</div>
-                        <div id="detailInvoiceDate" class="info-value">-</div>
-                    </div>
-                    <div class="info-group">
-                        <div class="info-label">Invoice Amount:</div>
-                        <div id="detailInvoiceAmount" class="info-value">-</div>
                     </div>
                     <div class="info-group">
                         <div class="info-label">Balance:</div>
@@ -344,7 +335,8 @@
                             <select id="newPaymentMethod">
                                 <option value="cash">Cash</option>
                                 <option value="upi">UPI</option>
-                                <option value="other">Other</option>
+                                <option value="other">Cheque</option>
+                                <option value="upi">NEFT</option>
                             </select>
                         </div>
                     </div>

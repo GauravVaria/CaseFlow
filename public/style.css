@@ -395,7 +395,7 @@ tr:hover {
 }
 
 #installmentsTable th {
-    background-color: #f8f9fa;
+    background-color: var(--primary);
     padding: 12px 8px;
     text-align: left;
     border-bottom: 2px solid #dee2e6;

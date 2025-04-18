@@ -614,7 +614,7 @@ function renderInstallmentsTable(caseData) {
             <td class="${installment.received ? 'text-success' : 'text-warning'}">
                 ${installment.received ? 'Received' : 'Pending'}
             </td>
-            <td>${installment.remarks || 'N/A'}</td>
+            <td>${installment.remarks || 'N/A'}</td> <!-- Show remarks here -->
             <td class="text-center">
                 <button class="btn btn-sm btn-outline-danger remove-installment" title="Remove installment">
                     <i class="fas fa-trash-alt"></i>
@@ -689,6 +689,7 @@ function generateNewInvoice(e) {
     const paymentMethodElem = document.getElementById('newPaymentMethod');
     const customPaymentMethodElem = document.getElementById('newCustomPaymentMethod');
     const remarks = document.getElementById('newRemarks').value;
+    const newRemarks = document.getElementById('newRemarks').value; // Get remarks value
 
     const paymentMethod = paymentMethodElem.value === 'other'
         ? customPaymentMethodElem.value
@@ -702,7 +703,9 @@ function generateNewInvoice(e) {
         invoice: invoiceNumber,
         date: invoiceDate,
         amount: invoiceAmount,
-        paymentMethod
+        paymentMethod,
+        remarks: remarks, // Include remarks in the installment
+        received: true // Assuming generated invoices are automatically marked as received
     });
 
     saveCasesToCloud();
